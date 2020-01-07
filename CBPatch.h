@@ -9,6 +9,6 @@
 #ifndef CBPatch_h
 #define CBPatch_h
 
-int kernPat(void **buf, size_t size, char *versionNumber);
+int kernPat(void **buf, size_t size, char *versionNumber, int nukesb);
 
 #endif /* CBPatch_h */

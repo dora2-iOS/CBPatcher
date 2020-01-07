@@ -15,9 +15,17 @@
 
 int main(int argc, char **argv) {
     
-    if (argc < 4) {
-        printf("Missing args (cbpatcher infile outfile version)\n");
+    if (argc < 4 || 5 < argc) {
+        printf("Missing args (cbpatcher infile outfile version [--nosb])\n");
         return -1;
+    }
+    
+    int nukesb = 1;
+    
+    if (argc == 5) {
+        if(!strcmp(argv[4], "--nosb")){
+            nukesb = 0;
+        }
     }
     
     char *fileName = argv[1];
@@ -35,7 +43,7 @@ int main(int argc, char **argv) {
     
     char *versionNum = argv[3];
     
-    ret = kernPat(fileBuf, fileLen, versionNum);
+    ret = kernPat(fileBuf, fileLen, versionNum, nukesb);
     
     if (ret) {
         printf("Failed to patch kernel\n");

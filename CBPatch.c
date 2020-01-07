@@ -215,7 +215,7 @@ uint32_t find_kext_text_section(void *kernelcache, size_t size, const char *name
  *
  * Note: You must disable KASLR to use the sbops patch.
  */
-int kernPat9(void *buf, size_t len, char *version) {
+int kernPat9(void *buf, size_t len, char *version, int nukesb) {
     
     int i = 0;
     int ii = 0;
@@ -226,7 +226,7 @@ int kernPat9(void *buf, size_t len, char *version) {
     
     if (!kextbase) {
         PatchLog("Error finding kextbase\n");
-        break;
+        return -1;
     }
     
     while ((uint32_t)i < (uint32_t)(len-0x8000)) {
@@ -565,69 +565,75 @@ int kernPat9(void *buf, size_t len, char *version) {
                     break;
                 }
                 
-                /* 9.2.1+ use mac_policy_ops v46, older 9.x use v37 (xnu/security/mac_policy.h) */
-                if (versionFloat >= (float)9.2 && strcmp(version, "9.2")) {
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_file_check_mmap)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_access)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_chroot)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_deleteextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_exchangedata)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_exec)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_ioctl)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_link)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_listextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_open)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_readlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setflags)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setmode)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setowner)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_stat)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_truncate)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_unlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_notify_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_fsgetpath)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_mount_check_stat)), 0x4);
+                if (nukesb) {
+                    /* 9.2.1+ use mac_policy_ops v46, older 9.x use v37 (xnu/security/mac_policy.h) */
+                    if (versionFloat >= (float)9.2 && strcmp(version, "9.2")) {
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_file_check_mmap)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_access)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_chroot)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_deleteextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_exchangedata)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_exec)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_ioctl)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_link)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_listextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_open)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_readlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setflags)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setmode)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setowner)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_stat)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_truncate)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_unlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_notify_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_fsgetpath)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_vnode_check_getattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops9, mpo_mount_check_stat)), 0x4);
+                    }
+                    else {
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_file_check_mmap)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_access)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_chroot)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_deleteextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_exchangedata)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_exec)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_getattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_getextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_ioctl)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_link)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_listextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_open)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_readlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setflags)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setmode)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setowner)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_stat)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_truncate)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_unlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_notify_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_fsgetpath)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_mount_check_stat)), 0x4);
+                    }
                 }
-                else {
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_file_check_mmap)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_access)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_chroot)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_deleteextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_exchangedata)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_exec)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_getattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_getextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_ioctl)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_link)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_listextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_open)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_readlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setflags)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setmode)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setowner)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_stat)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_truncate)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_unlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_notify_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_vnode_check_fsgetpath)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops90, mpo_mount_check_stat)), 0x4);
+                
+                if (!nukesb) {
+                    printf("[SKIP] Sandbox policies were NOT patched.\n");
                 }
                 
                 ii++;
@@ -699,7 +705,7 @@ int kernPat9(void *buf, size_t len, char *version) {
  *
  * Note: You must disable KASLR to use the sbops patch.
  */
-int kernPat10(void *buf, size_t len, char *version) {
+int kernPat10(void *buf, size_t len, char *version, int nukesb) {
     
     uint32_t* fullSize = (uint32_t*)len;
     int i = 0;
@@ -711,7 +717,7 @@ int kernPat10(void *buf, size_t len, char *version) {
     
     if (!kextbase) {
         PatchLog("Error finding kextbase\n");
-        break;
+        return -1;
     }
     
     while ((uint32_t)i < (uint32_t)(fullSize-0x8000)) {
@@ -996,7 +1002,7 @@ int kernPat10(void *buf, size_t len, char *version) {
                     break;
                 }
                 
-                if (versionFloat == (float)10.0) {
+                if (versionFloat == (float)10.0 && nukesb) {
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops100, mpo_file_check_mmap)), 0x4);
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops100, mpo_vnode_check_rename)), 0x4);
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops100, mpo_vnode_check_rename)), 0x4);
@@ -1031,7 +1037,7 @@ int kernPat10(void *buf, size_t len, char *version) {
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops100, mpo_proc_check_fork)), 0x4);
                 }
                 
-                else if (versionFloat < (float)10.3 && versionFloat > (float)10.0) {
+                else if (versionFloat < (float)10.3 && versionFloat > (float)10.0  && nukesb) {
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops101, mpo_file_check_mmap)), 0x4);
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops101, mpo_vnode_check_rename)), 0x4);
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops101, mpo_vnode_check_rename)), 0x4);
@@ -1066,40 +1072,42 @@ int kernPat10(void *buf, size_t len, char *version) {
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops101, mpo_proc_check_getauid)), 0x4);
                     bzero(buf+(sbops+offsetof(struct mac_policy_ops101, mpo_proc_check_fork)), 0x4);
                 }
-                else {
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_file_check_mmap)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_rename)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_access)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_chroot)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_deleteextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_exchangedata)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_exec)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_ioctl)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_link)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_listextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_open)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_readlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setattrlist)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setextattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setflags)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setmode)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setowner)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setutimes)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_stat)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_truncate)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_unlink)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_notify_create)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_fsgetpath)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getattr)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_mount_check_stat)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_setauid)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_getauid)), 0x4);
-                    bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_fork)), 0x4);
+                else if (versionFloat >= (float)10.3 && versionFloat < (float)10.4) {
+                    if (nukesb) {
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_file_check_mmap)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_rename)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_access)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_chroot)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_deleteextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_exchangedata)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_exec)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_ioctl)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_link)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_listextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_open)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_readlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setattrlist)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setextattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setflags)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setmode)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setowner)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_setutimes)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_stat)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_truncate)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_unlink)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_notify_create)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_fsgetpath)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_vnode_check_getattr)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_mount_check_stat)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_setauid)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_getauid)), 0x4);
+                        bzero(buf+(sbops+offsetof(struct mac_policy_ops103, mpo_proc_check_fork)), 0x4);
+                    }
                     
                     uint32_t res = *(uint32_t*)(buf+sbops+offsetof(struct mac_policy_ops103, mpo_cred_label_update_execve))-kextbase-0x80001000-1;
                     
@@ -1126,6 +1134,10 @@ int kernPat10(void *buf, size_t len, char *version) {
                         break;
                     }
                     
+                }
+                
+                if (!nukesb) {
+                    printf("[SKIP] Sandbox policies were NOT patched.\n");
                 }
                 
                 ii++;
@@ -1156,7 +1168,7 @@ int kernPat10(void *buf, size_t len, char *version) {
             
             uint32_t startOff = 0;
             
-            uint32_t kextbase = find_kextbase(buf, len);
+            kextbase = find_kextbase(buf, len);
             
             startOff = find_kext_text_section(buf, len, "AppleMobileFileIntegrity")-kextbase;
             
@@ -1194,7 +1206,7 @@ int kernPat10(void *buf, size_t len, char *version) {
             /* This patch is required because loading substrate on-boot would break here */
             
             uint32_t startOff = 0;
-            uint32_t kextbase = find_kextbase(buf, len);
+            kextbase = find_kextbase(buf, len);
             
             startOff = find_kext_text_section(buf, len, "AppleHDQGasGaugeControl")-kextbase;
             
@@ -1269,7 +1281,7 @@ int kernPat10(void *buf, size_t len, char *version) {
     return 0;
 }
 
-int kernPat(void **buf, size_t size, char *versionNumber) {
+int kernPat(void **buf, size_t size, char *versionNumber, int nukesb) {
     
     long versionInt = strtol(versionNumber, 0, 0);
     
@@ -1283,11 +1295,11 @@ int kernPat(void **buf, size_t size, char *versionNumber) {
     switch (versionInt) {
             
         case 10:
-            ret = kernPat10(buf, size, versionNumber);
+            ret = kernPat10(buf, size, versionNumber, nukesb);
             break;
       
         case 9:
-            ret = kernPat9(buf, size, versionNumber);
+            ret = kernPat9(buf, size, versionNumber, nukesb);
             break;
             
         /* more soon */
