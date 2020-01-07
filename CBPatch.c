@@ -728,9 +728,9 @@ int kernPat10(void *buf, size_t len, char *version, int nukesb) {
                 
                 if (*(uint64_t*)&buf[i] == 0xf04fd1040f01f01b && *(uint32_t*)&buf[i+8] == 0x9d080801) {
                     
-                    PatchLog("Found mount_common at 0x%x\n", i + 0x5);
+                    PatchLog("Found mount_common at 0x%x\n", i - 0x1);
                     
-                    *(uint8_t*)&buf[(i+0x5)] = 0xe0;
+                    *(uint8_t*)&buf[(i-0x1)] = 0xe0;
                     
                     ii++;
                     
@@ -740,9 +740,9 @@ int kernPat10(void *buf, size_t len, char *version, int nukesb) {
             else {
                 if (*(uint32_t*)&buf[i] == 0x0f01f01a && *(uint16_t*)&buf[i+4] == 0xd13b) {
                     
-                    PatchLog("Found mount_common at 0x%x\n", i + 0x5);
+                    PatchLog("Found mount_common at 0x%x\n", i - 0x1);
                     
-                    *(uint8_t*)&buf[(i+0x5)] = 0xe0;
+                    *(uint8_t*)&buf[(i-0x1)] = 0xe0;
                     
                     ii++;
                     
