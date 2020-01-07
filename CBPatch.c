@@ -222,6 +222,13 @@ int kernPat9(void *buf, size_t len, char *version) {
     
     float versionFloat = strtof(version, 0);
     
+    uint32_t kextbase = find_kextbase(buf, len)-0x80001000;
+    
+    if (!kextbase) {
+        PatchLog("Error finding kextbase\n");
+        break;
+    }
+    
     while ((uint32_t)i < (uint32_t)(len-0x8000)) {
         
         if (ii == 0) {
@@ -337,7 +344,7 @@ int kernPat9(void *buf, size_t len, char *version) {
                 if (iii == 1) {
                     if (*(uint64_t*)&buf[a] == 0xf010798044406da0 && *(uint32_t*)&buf[a+0x8] == 0xd0060f01 && *(uint16_t*)&buf[a+0xC] == 0x4620) {
                         PatchLog("Found _mapForIO at 0x%x\n", a);
-                        mapforIO = ((a + 0x80001000) + 0x1);
+                        mapforIO = ((a + 0x80001000 + kextbase) + 0x1);
                         iii++;
                         a = 0;
                     }
@@ -346,6 +353,7 @@ int kernPat9(void *buf, size_t len, char *version) {
                     if (*(uint32_t*)&buf[a] == osMallocTagFree) {
                         if (*(uint32_t*)&buf[a+0x4] == PE_i_can_has_kernel_configuration) {
                             PatchLog("Found LwVM call to PE_i_can_has_kernel_configuration at 0x%x\n", a + 0x4);
+                            // Change PE_I_can_has_kernel_configuration call and jumping over partition->isWriteProtected check
                             *(uint32_t*)&buf[a+0x4] = mapforIO;
                             iii++;
                             a = 0;
@@ -507,14 +515,6 @@ int kernPat9(void *buf, size_t len, char *version) {
             }
             
             if (seatbeltSandboxPolicyStr) {
-                
-                uint32_t kextbase = find_kextbase(buf, len)-0x80001000;
-                
-                if (!kextbase) {
-                    PatchLog("Error finding kextbase\n");
-                    break;
-                }
-                
                 uint32_t strRef = (seatbeltSandboxPolicyStr + 0x80001000 + kextbase);
                 
                 PatchLog("Found seatbelt sandbox policy at 0x%x\n", i);
@@ -707,6 +707,13 @@ int kernPat10(void *buf, size_t len, char *version) {
     
     float versionFloat = strtof(version, 0);
     
+    uint32_t kextbase = find_kextbase(buf, len)-0x80001000;
+    
+    if (!kextbase) {
+        PatchLog("Error finding kextbase\n");
+        break;
+    }
+    
     while ((uint32_t)i < (uint32_t)(fullSize-0x8000)) {
         
         if (ii == 0) {
@@ -787,7 +794,7 @@ int kernPat10(void *buf, size_t len, char *version) {
                 if (iii == 1) {
                     if (*(uint64_t*)&buf[a] == 0xf010798044406da8 && *(uint16_t*)&buf[a+0x8] == 0x0f01) {
                         PatchLog("Found _mapForIO at 0x%x\n", a);
-                        mapforIO = ((a + 0x80001000) + 0x1);
+                        mapforIO = ((a + 0x80001000 + kextbase) + 0x1);
                         iii++;
                         a = 0;
                     }
@@ -796,6 +803,7 @@ int kernPat10(void *buf, size_t len, char *version) {
                     if (*(uint32_t*)&buf[a] == osMallocTagFree) {
                         if (*(uint32_t*)&buf[a+0x4] == PE_i_can_has_kernel_configuration) {
                             PatchLog("Found LwVM call to PE_i_can_has_kernel_configuration at 0x%x\n", a + 0x4);
+                            // Change PE_I_can_has_kernel_configuration call and jumping over partition->isWriteProtected check
                             *(uint32_t*)&buf[a+0x4] = mapforIO;
                             iii++;
                             a = 0;
@@ -946,14 +954,6 @@ int kernPat10(void *buf, size_t len, char *version) {
             }
             
             if (seatbeltSandboxPolicyStr) {
-                
-                uint32_t kextbase = find_kextbase(buf, len)-0x80001000;
-                
-                if (!kextbase) {
-                    PatchLog("Error finding kextbase\n");
-                    break;
-                }
-                
                 uint32_t strRef = (seatbeltSandboxPolicyStr + 0x80001000 + kextbase);
                 
                 PatchLog("Found seatbelt sandbox policy at 0x%x\n", i);
