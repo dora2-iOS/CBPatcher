@@ -870,6 +870,29 @@ int kernPat10(void *buf, size_t len, char *version, int nukesb) {
         }
         
         if (ii == 4) {
+            
+            // Notes: iOS 10.3 introduced the initial form of task_conversion_eval(), a weak mitigation that blocks userspace from accessing a right to the real kernel task port.
+            // ref: https://googleprojectzero.blogspot.com/2020/06/a-survey-of-recent-ios-kernel-exploits.html
+            if (versionFloat >= (float)10.3) {
+                
+                // convert_port_to_locked_task()
+                // if (task == kernel_task && ..) -> if(0)
+                if (*(uint64_t*)&buf[i] == 0x42860000F8DB6CAE) {
+                    i+=0x8;
+                    PatchLog("Found convert_port_to_locked_task at 0x%x\n", i);
+                    *(uint8_t*)&buf[i+0x1] = 0xe0;
+                }
+                
+                // convert_port_to_task_with_exec_token()
+                // if (task == kernel_task && ..) -> if(0)
+                if (*(uint64_t*)&buf[i] == 0x0142F2C0016CF24B) {
+                    PatchLog("Found convert_port_to_task_with_exec_token at 0x%x\n", i);
+                    *(uint32_t*)&buf[i] = 0xbf00e007;
+                }
+            }
+            
+            // task_for_pid():
+            //   "if (pid == 0)" -> NOP
             if (*(uint64_t*)&buf[i] == 0xd04d2e001101e9cd && *(uint32_t*)&buf[i+0xC] == 0x28009002) {
                 PatchLog("Found task for pid at 0x%x\n", i);
                 *(uint16_t*)&buf[i+0x6] = 0xbf00;
