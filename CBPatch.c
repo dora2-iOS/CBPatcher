@@ -885,10 +885,10 @@ int kernPat10(void *buf, size_t len, char *version, int nukesb) {
                 
                 // convert_port_to_task_with_exec_token()
                 // if (task == kernel_task && ..) -> if(0)
-                if (*(uint64_t*)&buf[i] == 0x0142F2C0016CF24B) {
-                    PatchLog("Found convert_port_to_task_with_exec_token at 0x%x\n", i);
-                    *(uint32_t*)&buf[i] = 0xbf00e007;
-                }
+                //if (*(uint64_t*)&buf[i] == 0x0142F2C0016CF24B) {
+                //    PatchLog("Found convert_port_to_task_with_exec_token at 0x%x\n", i);
+                //    *(uint32_t*)&buf[i] = 0xbf00e007;
+                //}
             }
             
             // task_for_pid():
